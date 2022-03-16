@@ -1,0 +1,12 @@
+{
+	"log_levels": [
+		{
+          "level": "ACCOUNT_LEVEL",
+          "service_names": "accountsManager,accounts,accountBillableUsage,logDelivery,unityCatalog,ssoConfigBackend"
+        },
+        {
+          "level": "WORKSPACE_LEVEL",
+          "service_names": "accounts,clusters,databrickssql,dbfs,featureStore,genie,gitCredentials,globalInitScripts,iamRole,instancePools,jobs,mlflowAcledArtifact,mlflowExperiment,modelRegistry,notebook,RemoteHistoryService,repos,ssh,secrets,sqlanalytics,sqlPermissions,workspace"
+        }
+      ]
+}
