@@ -23,7 +23,7 @@ log_levels_and_service_names = get_audit_levels_and_service_names(CONFIG_FILE)
 import dlt
 from pyspark.sql.functions import input_file_name, col, from_utc_timestamp, from_unixtime
 
-def create_bronze_tables(audit_level):
+def create_bronze_tables(audit_level, service_names):
   
   @dlt.table(
     name=f"bronze_{audit_level}",
@@ -35,15 +35,15 @@ def create_bronze_tables(audit_level):
     "delta.autoOptimize.autoCompact": "true"
     }
   )
-  @dlt.expect("clean_schema", "_rescued_data IS NULL")
+  @dlt.expect_all({"clean_schema": "_rescued_data IS NULL", "unexpected_service_names": f"serviceName IN {tuple(service_names)}", "valid_workspace_id": "workspaceId >=0"})
   def create_bronze_tables():
     return (spark.readStream
             .format("cloudFiles")
             .option("cloudFiles.format", "json") 
             .option("cloudFiles.includeExistingFiles", "true")
             .option("cloudFiles.inferColumnTypes", "true")
-            .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
-            .option("cloudFiles.schemaHints", "requestParams map<string, string>")
+            .option("cloudFiles.schemaEvolutionMode", "rescue")
+            .option("cloudFiles.schemaHints", "workspaceId long, requestParams map<string, string>")
             .option("cloudFiles.schemaLocation", f"{OUTPUT_PATH}bronze/schema/{audit_level}/")
             .load(INPUT_PATH)
             .where(f"auditLevel == '{audit_level.upper()}_LEVEL'")
@@ -64,7 +64,7 @@ def create_silver_tables(audit_level):
     "pipelines.autoOptimize.zOrderCols": "serviceName,actionName,email"
     }
   )
-  @dlt.expect_all({"timestamp_is_not_null": "timestamp IS NOT NULL"})
+  @dlt.expect_all({"timestamp_is_not_null": "timestamp IS NOT NULL", "service_name_is_not_null": "serviceName IS NOT NULL", "action_name_is_not_null": "actionName IS NOT NULL"})
   def create_silver_tables():
     return (dlt.read_stream(f"bronze_{audit_level}")
             .withColumn("timestamp", from_utc_timestamp(from_unixtime(col("timestamp") / 1000), "UTC"))
@@ -93,17 +93,19 @@ def create_gold_tables(audit_level, service_name):
   def create_gold():
     return (dlt.read_stream(f"silver_{audit_level}")
            .where(f"serviceName == '{service_name}'")
-           .drop("filename"))
+           .selectExpr("*", "response.*")
+           .drop("source_filename", "response"))
 
 # COMMAND ----------
 
 for log_level in log_levels_and_service_names:
   
-  log_level_name = log_level["level"].split('_')[0].lower()
+  level = log_level["level"].split('_')[0].lower()
+  service_names = log_level["service_names"].split(",")
   
-  create_bronze_tables(log_level_name)
-  create_silver_tables(log_level_name)
+  create_bronze_tables(level, service_names)
+  create_silver_tables(level)
   
-  for service in log_level["service_names"].split(","):
+  for service in service_names:
   
-    create_gold_tables(log_level_name, service)
+    create_gold_tables(level, service)
