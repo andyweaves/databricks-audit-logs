@@ -43,7 +43,7 @@ def create_bronze_tables(audit_level, service_names):
             .option("cloudFiles.includeExistingFiles", "true")
             .option("cloudFiles.inferColumnTypes", "true")
             .option("cloudFiles.schemaEvolutionMode", "rescue")
-            .option("cloudFiles.schemaHints", "workspaceId long, requestParams map<string, string>")
+            .option("cloudFiles.schemaHints", "workspaceId long, requestParams map<string, string>, response struct<errorMessage: string, result: string, statusCode: bigint>")
             .option("cloudFiles.schemaLocation", f"{OUTPUT_PATH}bronze/schema/{audit_level}/")
             .load(INPUT_PATH)
             .where(f"auditLevel == '{audit_level.upper()}_LEVEL'")
