@@ -6,7 +6,7 @@
         },
         {
           "level": "WORKSPACE_LEVEL",
-          "service_names": "accounts,clusters,databrickssql,dbfs,featureStore,genie,gitCredentials,globalInitScripts,iamRole,instancePools,jobs,mlflowAcledArtifact,mlflowExperiment,modelRegistry,notebook,RemoteHistoryService,repos,ssh,secrets,sqlanalytics,sqlPermissions,workspace"
+          "service_names": "accounts,capsule8-alerts-dataplane,clamAVScanService-dataplane,clusters,databrickssql,dbfs,deltaPipelines,featureStore,genie,gitCredentials,globalInitScripts,iamRole,instancePools,jobs,mlflowAcledArtifact,mlflowExperiment,modelRegistry,notebook,RemoteHistoryService,repos,ssh,secrets,sqlanalytics,sqlPermissions,workspace"
         }
       ]
 }
