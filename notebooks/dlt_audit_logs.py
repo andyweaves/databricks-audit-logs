@@ -78,8 +78,8 @@ def create_silver_tables(audit_level):
 def create_gold_tables(audit_level, service_name):
   
   @dlt.table(
-      name=f"gold_{audit_level}_{service_name.lower()}",
-      path=f"{OUTPUT_PATH}gold/{audit_level}/{service_name.lower()}/",
+      name=f"gold_{audit_level}_{service_name.replace('-', '_').lower()}",
+      path=f"{OUTPUT_PATH}gold/{audit_level}/{service_name.replace('-', '_').lower()}/",
       partition_cols=["date"], 
       table_properties={
       "quality": "gold", 
