@@ -29,7 +29,7 @@ ORDER BY
 
 SELECT
   window(timestamp, '30 minutes'),
-  email,
+  requestParams.user,
   statusCode,
   count(*) AS total
 FROM
