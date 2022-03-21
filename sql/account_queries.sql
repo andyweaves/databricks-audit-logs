@@ -27,7 +27,7 @@ ORDER BY
 -- COMMAND ----------
 
 SELECT
-  window(timestamp, '30 minutes'),
+  WINDOW(timestamp, '30 minutes'),
   requestParams.user,
   statusCode,
   count(*) AS total
@@ -40,4 +40,33 @@ GROUP BY
   1,
   2,
   3
-ORDER BY window DESC
+ORDER BY WINDOW DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ###Detect changes to Production workspaces
+-- MAGIC Databricks account administrators can [Create and manage workspaces using the account console](https://docs.databricks.com/administration-guide/account-settings-e2/workspaces.html). However, for specific resources (I.e. production workspaces) you may want to be proactively informed if they have been updated or deleted. 
+-- MAGIC 
+-- MAGIC The following query can be used to monitor changes to Databricks workspaces which have ```prod``` in their ```workspace_name```
+
+-- COMMAND ----------
+
+SELECT
+  timestamp,
+  email,
+  actionName,
+  requestParams.workspace_id AS workspace_id,
+  requestParams,
+  result:workspace.workspace_name AS workspace_name,
+  result:workspace.aws_account_id AS aws_account_id
+FROM
+  audit_logs.gold_account_accountsmanager
+WHERE
+  actionName IN (
+    "updateWorkspaceConfiguration",
+    "deleteWorkspaceConfiguration"
+  )
+  AND contains(result:workspace.workspace_name, "prod")
+ORDER BY
+  timestamp DESC
