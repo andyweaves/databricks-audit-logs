@@ -75,6 +75,8 @@ def create_silver_tables(audit_level):
 
 # COMMAND ----------
 
+from pyspark.sql.functions import from_json
+
 def create_gold_tables(audit_level, service_name):
   
   @dlt.table(
@@ -94,6 +96,7 @@ def create_gold_tables(audit_level, service_name):
     return (dlt.read_stream(f"silver_{audit_level}")
            .where(f"serviceName == '{service_name}'")
            .selectExpr("*", "response.*")
+           .withColumn("result", from_json("result", "map<string, string>"))
            .drop("source_filename", "response"))
 
 # COMMAND ----------
