@@ -28,7 +28,7 @@ ORDER BY
 -- COMMAND ----------
 
 SELECT
-  window(timestamp, '30 minutes'),
+  WINDOW(timestamp, '30 minutes'),
   requestParams.user,
   statusCode,
   count(*) AS total
@@ -41,7 +41,29 @@ GROUP BY
   1,
   2,
   3
-ORDER BY window DESC
+ORDER BY WINDOW DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ###IP Access List Failures
+-- MAGIC Databricks allows customers to configure [IP Access Lists](https://docs.databricks.com/security/network/ip-access-list.html) to restrict access to their workspaces. However, they may want monitor and be alerted whenever access is attempted from an untrusted network. The following query can be used to monitor all ```IpAccessDenied``` events.
+
+-- COMMAND ----------
+
+SELECT
+  timestamp,
+  workspaceId,
+  email,
+  actionName,
+  requestParams,
+  sourceIPAddress
+FROM
+  audit_logs.gold_workspace_accounts
+WHERE
+  actionName = "IpAccessDenied"
+ORDER BY
+  timestamp DESC
 
 -- COMMAND ----------
 
@@ -83,7 +105,7 @@ SELECT
 FROM
   audit_logs.gold_workspace_clusters
 WHERE
-  actionName = 'changeClusterAcl'
+  actionName IN ("changeClusterAcl", "changeClusterPolicyAcl")
 ORDER BY
   timestamp DESC
 
@@ -99,7 +121,7 @@ SELECT
 FROM
   audit_logs.gold_workspace_databrickssql
 WHERE
-  actionName IN ('changeEndpointAcls', 'changePermissions')
+  actionName IN ("changeEndpointAcls", "changePermissions")
 ORDER BY
   timestamp DESC
 
@@ -115,7 +137,7 @@ SELECT
 FROM
   audit_logs.gold_workspace_iamrole
 WHERE
-  actionName = 'changeIamRoleAcl'
+  actionName IN ("changeIamRoleAcl", "changeIamRoleAssumeAcl")
 ORDER BY
   timestamp DESC
 
@@ -131,7 +153,23 @@ SELECT
 FROM
   audit_logs.gold_workspace_jobs
 WHERE
-  actionName IN ('changeJobAcl', 'resetJobAcl')
+  actionName IN ("changeJobAcl", "resetJobAcl")
+ORDER BY
+  timestamp DESC
+
+-- COMMAND ----------
+
+SELECT
+  timestamp,
+  workspaceId,
+  email,
+  actionName,
+  requestParams,
+  sourceIPAddress
+FROM
+  audit_logs.gold_workspace_secrets
+WHERE
+  actionName IN ("putAcl", "deleteAcl")
 ORDER BY
   timestamp DESC
 
@@ -175,5 +213,98 @@ FROM
   audit_logs.gold_workspace_workspace
 WHERE
   actionName = 'workspaceConfEdit'
+ORDER BY
+  timestamp DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ### Use of DBFS
+-- MAGIC Because you cannot set ACLs within a workspace on DBFS locations, Databricks recommends that you do not use the Databricks File System to store your data. The following query shows users who are performing Create or Update actions within the ```dbfs:/``` file system.
+
+-- COMMAND ----------
+
+SELECT
+  timestamp,
+  workspaceId,
+  email,
+  actionName,
+  requestParams,
+  sourceIPAddress
+FROM
+  audit_logs.gold_workspace_dbfs
+WHERE
+  actionName IN ("create", "mkdirs", "move", "put")
+  AND startswith(requestParams.path, "dbfs:/")
+ORDER BY
+  timestamp DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ### Use of Mount Points
+-- MAGIC Mount points can be an anti-pattern because on all 3 clouds there is the possibility of mounting external storage with cached credentials. These mount points will be accessible by all users of a workspace, bypassing any user level access controls. The following query can be used to monitor mount point creation, such that administrators can be alerted to the creation of mount points to external storages that are not expected. 
+
+-- COMMAND ----------
+
+SELECT
+  timestamp,
+  workspaceId,
+  email,
+  actionName,
+  requestParams,
+  sourceIPAddress
+FROM
+  audit_logs.gold_workspace_dbfs
+WHERE
+  actionName = "mount"
+ORDER BY
+  timestamp DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ###Download Results
+-- MAGIC Databricks allows customers to configure whether they want users to be able to download [notebook](https://docs.databricks.com/administration-guide/workspace/notebooks.html#manage-download-results) or [SQL query](https://docs.databricks.com/sql/admin/general.html) results, but some customers might want to monitor and report rather than prevent entirely. The following query can be used to monitor the download of results from notebooks, Databricks SQL, as well as the exporting of notebooks in formats that may contain query results.
+
+-- COMMAND ----------
+
+SELECT
+  timestamp,
+  workspaceId,
+  email,
+  serviceName,
+  actionName,
+  requestParams,
+  sourceIPAddress
+FROM
+  audit_logs.gold_workspace_notebook
+WHERE
+  actionName IN ("downloadPreviewResults", "downloadLargeResults")
+UNION ALL
+SELECT 
+  timestamp,
+  workspaceId,
+  email,
+  serviceName,
+  actionName,
+  requestParams,
+  sourceIPAddress
+FROM
+  audit_logs.gold_workspace_databrickssql WHERE actionName IN ("downloadQueryResult")
+UNION ALL 
+SELECT
+  timestamp,
+  workspaceId,
+  email,
+  serviceName,
+  actionName,
+  requestParams,
+  sourceIPAddress
+FROM
+  audit_logs.gold_workspace_workspace
+WHERE
+  actionName IN ("workspaceExport")
+  AND requestParams.workspaceExportFormat !="SOURCE"
 ORDER BY
   timestamp DESC
