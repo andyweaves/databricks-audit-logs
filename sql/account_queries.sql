@@ -70,3 +70,53 @@ WHERE
   AND contains(result:workspace.workspace_name, "prod")
 ORDER BY
   timestamp DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC We can extend the query above to search for all account objects associated with our production workspaces (assuming they share an established naming convention).
+-- MAGIC 
+-- MAGIC 
+-- MAGIC The following query can be used to monitor changes to account objects which have ```prod``` in their name
+
+-- COMMAND ----------
+
+SELECT * FROM (SELECT
+  timestamp,
+  email,
+  actionName,
+  requestParams.workspace_id AS workspace_id,
+  requestParams,
+  map_filter(map(
+  "workspace_name", result :workspace.workspace_name, 
+  "network_name", result :network.network_name, 
+  "storage_configuration_name", result :storage_configuration.storage_configuration_name,
+  "credentials_name", result :credentials.credentials_name,
+  "key_alias", result :customer_managed_key:aws_key_info.key_alias,
+  "vpc_endpoint_name", result :vpc_endpoint.vpc_endpoint_name,
+  "private_access_settings_name", result :private_access_settings.private_access_settings_name
+  ), 
+  (k, v) -> v IS NOT NULL ) AS resources,
+  result
+FROM
+  audit_logs.gold_account_accountsmanager
+WHERE
+  actionName IN (
+    "deleteCredentialsConfiguration",
+    "deleteCustomerManagedKeyConfiguration",
+    "deleteNetworkConfiguration",
+    "deletePrivateAccessSettings",
+    "deleteStorageConfiguration",
+    "deleteVpcEndpoint"
+    "deleteWorkspaceConfiguration"
+    "updateCredentialsConfiguration",
+    "updateCustomerManagedKeyConfiguration",
+    "updateNetworkConfiguration",
+    "updatePrivateAccessSettings",
+    "updateStorageConfiguration",
+    "updateVpcEndpoint"
+    "updateWorkspaceConfiguration"
+  )) 
+  WHERE EXISTS(map_values(resources), x -> contains(x, "prod"))
+ORDER BY
+  timestamp DESC
