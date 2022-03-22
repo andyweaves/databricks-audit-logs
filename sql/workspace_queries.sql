@@ -308,3 +308,27 @@ WHERE
   AND requestParams.workspaceExportFormat !="SOURCE"
 ORDER BY
   timestamp DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ###ClamAV Scan Results
+-- MAGIC Customers who have a requirement to process cardholder data as defined by PCI-DSS, or who have elevated security requirements can choose to leverage our [PCI-DSS compliance controls](https://docs.databricks.com/administration-guide/cloud-configurations/aws/pci.html) or [Enhanced Security Mode](https://docs.databricks.com/administration-guide/cloud-configurations/aws/enhanced-security-mode.html) features on AWS. 
+-- MAGIC 
+-- MAGIC The query below searches [audit log entries related to ClamAV](https://docs.databricks.com/administration-guide/cloud-configurations/aws/monitor-log-schemas.html#clamav-audit-log-row-schema) to find any occurances where the AV scan has detected infected files
+
+-- COMMAND ----------
+
+SELECT
+  timestamp,
+  workspaceId,
+  actionName,
+  requestParams.instanceId,
+  result
+FROM
+  audit_logs.gold_workspace_clamavscanservice_dataplane
+WHERE
+  startswith(result, "Infected files:")
+  AND regexp_extract(result, ("Infected files: (\\d+)")) >= 1
+ORDER BY
+  timestamp DESC
