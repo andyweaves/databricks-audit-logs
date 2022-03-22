@@ -14,9 +14,9 @@ To get the new DLT pipeline running on your environment, please use the followin
    * ```OUTPUT_PATH```: The cloud storage path you want to use for your audit log Delta Lakes. This will usually be a protected storage account which isn’t exposed to your Databricks users.
    * ```CONFIG_FILE```: The path to the audit_logs.json file once checked out in your repo. 
 3. Note: once you’ve edited the settings that are configurable via the UI, you’ll need to edit the JSON so that you can add the configuration needed to authenticate with your ```INPUT_PATH``` and ```OUTPUT_PATH``` to the clusters object:
-   * For AWS add the instance_profile_arn to the aws_attributes object.
-   * For Azure add the Service Principal secrets to the spark_conf object.
-   * For GCP add the google_service_account to the  gcp_attributes object.
+   * For AWS add the ```instance_profile_arn``` to the aws_attributes object.
+   * For Azure add the Service Principal secrets to the ```spark_conf``` object.
+   * For GCP add the ```google_service_account``` to the  ```gcp_attributes``` object.
 4. Now you should be ready to configure your pipeline to run based on the appropriate schedule and trigger. Once it’s ran successfully, you should see something like this:
 
 ![image](https://user-images.githubusercontent.com/43955924/159453365-f8c0045d-45bb-46cf-a1ab-6b92ac640e3a.png)
