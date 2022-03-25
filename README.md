@@ -6,9 +6,9 @@ This repo contains a DLT pipeline that can be used to process Databricks audit l
 
 ![image](https://user-images.githubusercontent.com/43955924/159453039-c8e5a653-c8dc-4353-84ce-3b22c984b2cf.png)
 
-To get the new DLT pipeline running on your environment, please use the following steps:
+To get this DLT pipeline running on your environment, please use the following steps:
 
-1. Clone the Github Repo using the repos for Git Integration (see the docs for [AWS](https://docs.databricks.com/repos/index.html), [Azure](https://docs.microsoft.com/en-us/azure/databricks/repos/), [GCP](https://docs.gcp.databricks.com/repos/index.html)). 
+1. Clone this Github Repo using our Repos for Git Integration (see the docs for [AWS](https://docs.databricks.com/repos/index.html), [Azure](https://docs.microsoft.com/en-us/azure/databricks/repos/), [GCP](https://docs.gcp.databricks.com/repos/index.html)). 
 2. Create a new DLT pipeline, linking to the [dlt_audit_logs.py](notebooks/dlt_audit_logs.py) notebook (see the docs for [AWS](https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-ui.html), [Azure](https://docs.microsoft.com/en-us/azure/databricks/data-engineering/delta-live-tables/delta-live-tables-ui), [GCP](https://docs.gcp.databricks.com/data-engineering/delta-live-tables/delta-live-tables-ui.html)). You’ll need to enter the following configuration options:
    * ```INPUT_PATH```: The cloud storage path that you’ve configured for audit log delivery. This will usually be a protected storage account which isn’t exposed to your Databricks users.
    * ```OUTPUT_PATH```: The cloud storage path you want to use for your audit log Delta Lakes. This will usually be a protected storage account which isn’t exposed to your Databricks users.
