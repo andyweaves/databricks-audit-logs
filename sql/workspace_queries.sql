@@ -46,6 +46,29 @@ ORDER BY WINDOW DESC
 -- COMMAND ----------
 
 -- MAGIC %md
+-- MAGIC ### Failed Login Attempts over Time
+-- MAGIC The query below extends the horizon of looking at events over 30 minute windows, and looks for trends relating to failed login attempts over the period of 6 months
+
+-- COMMAND ----------
+
+SELECT
+  date_trunc("week", date) AS week,
+  requestParams.user,
+  count(*) AS total
+FROM
+  audit_logs.gold_workspace_accounts
+WHERE
+  actionName IN ('login', 'tokenLogin')
+  AND statusCode IN (401, 403)
+  AND date >= current_date - 180
+GROUP BY
+  1,
+  2
+ORDER BY week DESC, total DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
 -- MAGIC ###IP Access List Failures
 -- MAGIC Databricks allows customers to configure [IP Access Lists](https://docs.databricks.com/security/network/ip-access-list.html) to restrict access to their workspaces. However, they may want monitor and be alerted whenever access is attempted from an untrusted network. The following query can be used to monitor all ```IpAccessDenied``` events.
 
@@ -332,3 +355,41 @@ WHERE
   AND regexp_extract(result, ("Infected files: (\\d+)")) >= 1
 ORDER BY
   timestamp DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ### How reliable are my jobs?
+-- MAGIC The following query will show you the job run succeeded v failure rate across all workspaces, so you can see at an enterprise level how reliable your jobs are
+
+-- COMMAND ----------
+
+SELECT
+  date,
+  actionName,
+  count(*) AS total
+FROM
+  audit_logs.gold_workspace_jobs
+WHERE actionName IN ("runSucceeded", "runFailed")
+GROUP BY 1, 2
+ORDER BY date DESC, total DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ### Which IP Addresses are being used to connect to my workspaces?
+-- MAGIC The following query will show you which IP addresses have been used to connect to your workspaces over the last 90 days. Note that as well as your end users, the clusters themselves and some internal Databricks services may also interact with your workspace so you may see some IP addresses outside of your corporate range in this list. As long as the vast majority of connections are ones that you expect to see, and there aren't any that appear to abnormal, everything is probably working normally
+
+-- COMMAND ----------
+
+SELECT
+  sourceIpAddress AS source_ip,
+  count(*) AS num_requests
+FROM
+  audit_logs.silver_workspace
+WHERE 
+date >= current_date - 90
+AND sourceIpAddress != ""
+GROUP BY 1
+ORDER BY
+  num_requests DESC
