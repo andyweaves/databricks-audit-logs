@@ -124,6 +124,28 @@ ORDER BY
 -- COMMAND ----------
 
 -- MAGIC %md
+-- MAGIC ### Unauthorized attempts to access [Unity Catalog](https://databricks.com/product/unity-catalog) securables
+
+-- COMMAND ----------
+
+SELECT
+  date,
+  email,
+  sourceIpAddress,
+  requestParams.full_name_arg AS securable,
+  statusCode,
+  errorMessage
+FROM
+  audit_logs.gold_account_unitycatalog
+WHERE
+  date >= current_date() - 90
+  AND statusCode IN (401, 403)
+ORDER BY
+  date DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
 -- MAGIC ###Most Popular Data Assets
 -- MAGIC [Unity Catalog](https://databricks.com/product/unity-catalog) makes it easy to discover, audit and govern data assets in one place. Having a unified governance layer allows us to perform analytics on our data products. So we can (for example) run a query to see what our most popular datasets are.
 
@@ -196,7 +218,7 @@ ORDER BY
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC We can extend the query above to evaluate the `ip_access_lists` defined for [Delta Sharing]([Delta Sharing](https://databricks.com/product/delta-sharing)) recipients against our approved CIDR ranges
+-- MAGIC We can extend the query above to evaluate the `ip_access_lists` defined for [Delta Sharing]([Delta Sharing](https://databricks.com/product/delta-sharing) recipients against our approved CIDR ranges
 
 -- COMMAND ----------
 
