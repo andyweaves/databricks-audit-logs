@@ -182,7 +182,7 @@ ORDER BY
 -- COMMAND ----------
 
 SELECT
-  date_time,
+  date,
   email,
   actionName,
   requestParams.name AS delta_share
@@ -191,7 +191,7 @@ FROM
 WHERE actionName IN ("createRecipient", "updateRecipient")
 AND requestParams.ip_access_list IS NULL
 ORDER BY
-  date_time DESC
+  date DESC
 
 -- COMMAND ----------
 
@@ -213,6 +213,6 @@ FROM
   audit_logs.gold_account_unitycatalog
 WHERE actionName IN ("createRecipient", "updateRecipient")
 AND requestParams.ip_access_list IS NOT NULL
-AND NOT array_contains(from_json(requestParams.ip_access_list:allowed_ip_addresses, "ARRAY<STRING>"), "0.0.0.0/0")
+AND NOT arrays_overlap(from_json(requestParams.ip_access_list:allowed_ip_addresses, "ARRAY<STRING>"), array("0.0.0.0", "0.0.0.0/32"))
 ORDER BY
-  date_time DESC
+  date DESC
