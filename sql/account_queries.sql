@@ -173,3 +173,46 @@ GROUP BY
   2
 ORDER BY
   total_requests DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ###[Delta Sharing](https://databricks.com/product/delta-sharing) Recipients without IP ACLs defined
+
+-- COMMAND ----------
+
+SELECT
+  date_time,
+  email,
+  actionName,
+  requestParams.name AS delta_share
+FROM
+  audit_logs.gold_account_unitycatalog
+WHERE actionName IN ("createRecipient", "updateRecipient")
+AND requestParams.ip_access_list IS NULL
+ORDER BY
+  date_time DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC We can extend the query above to evaluate the `ip_access_lists` defined for [Delta Sharing]([Delta Sharing](https://databricks.com/product/delta-sharing)) recipients against our approved CIDR ranges
+
+-- COMMAND ----------
+
+SELECT
+  date,
+  email,
+  actionName,
+   CASE
+    WHEN actionName = "createRecipient" THEN requestParams.name
+    WHEN actionName = "updateRecipient" THEN requestParams.name_arg
+  END AS recipient_name,
+  from_json(requestParams.ip_access_list:allowed_ip_addresses, "ARRAY<STRING>") AS ip_access_list
+FROM
+  audit_logs.gold_account_unitycatalog
+WHERE actionName IN ("createRecipient", "updateRecipient")
+AND requestParams.ip_access_list IS NOT NULL
+AND NOT array_contains(from_json(requestParams.ip_access_list:allowed_ip_addresses, "ARRAY<STRING>"), "0.0.0.0/0")
+ORDER BY
+  date_time DESC
