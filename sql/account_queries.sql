@@ -120,3 +120,34 @@ WHERE
   WHERE EXISTS(map_values(resources), x -> contains(x, "prod"))
 ORDER BY
   timestamp DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ###Most Popular Data Assets
+-- MAGIC [Unity Catalog](https://databricks.com/product/unity-catalog) makes it easy to discover, audit and govern data assets in one place. Having a unified governance layer allows us to perform analytics on our data products. So we can (for example) run a query to see what our most popular datasets are.
+
+-- COMMAND ----------
+
+SELECT
+  CASE
+    WHEN actionName = "getTable" THEN "uc_table"
+    WHEN actionName = "getShare" THEN "delta_share"
+    ELSE "other"
+  END AS product_type,
+  CASE
+    WHEN actionName = "getTable" THEN requestParams.full_name_arg
+    WHEN actionName = "getShare" THEN requestParams.name
+    ELSE NULL
+  END AS data_product,
+  COUNT(*) AS total_requests
+FROM
+  audit_logs.gold_account_unitycatalog
+WHERE date >= current_date() - 90
+AND actionName IN ("getTable", "getShare")
+AND email IS NOT NULL
+GROUP BY
+  1,
+  2
+ORDER BY
+  total_requests DESC
