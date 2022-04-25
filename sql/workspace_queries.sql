@@ -384,12 +384,18 @@ ORDER BY date DESC, total DESC
 
 SELECT
   sourceIpAddress AS source_ip,
+  response.statusCode,
   count(*) AS num_requests
 FROM
   audit_logs.silver_workspace
-WHERE 
-date >= current_date - 90
-AND sourceIpAddress != ""
-GROUP BY 1
+WHERE
+  date >= current_date - 90
+  AND sourceIpAddress != ""
+  AND response.statusCode IS NOT NULL
+  AND response.statusCode BETWEEN 200
+  AND 599
+GROUP BY
+  1,
+  2
 ORDER BY
   num_requests DESC

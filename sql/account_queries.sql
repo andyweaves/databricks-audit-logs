@@ -151,3 +151,25 @@ GROUP BY
   2
 ORDER BY
   total_requests DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ### Which IP Addresses are being used to connect to my [Delta Shares](https://databricks.com/product/delta-sharing)?
+
+-- COMMAND ----------
+
+SELECT
+  sourceIpAddress AS source_ip,
+  statusCode AS status_code,
+  count(*) AS total_requests
+FROM
+  audit_logs.gold_account_unitycatalog
+WHERE
+  date >= current_date() - 90
+  AND actionName IN ("getShare")
+GROUP BY
+  1,
+  2
+ORDER BY
+  total_requests DESC
