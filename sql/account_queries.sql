@@ -199,6 +199,151 @@ ORDER BY
 -- COMMAND ----------
 
 -- MAGIC %md
+-- MAGIC This query could be taken a step further, by joining the `source_ip` to geolocation datasets such as those [offered for free by MaxMind](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data). Using the function below we can join our `sourceIpAddress` to the integer ranges used by the geolocation data, and get a rough location for our delta sharing requests. You'll need to use the [geoip2-csv-converter](https://github.com/maxmind/geoip2-csv-converter) to generate the start and end range values, and then upload them to Databricks SQL to match the join paths below.
+
+-- COMMAND ----------
+
+CREATE OR REPLACE FUNCTION inet_aton(ip_addr STRING)
+  RETURNS BIGINT
+  COMMENT "Convert an IP address or CIDR range into a BIGINT"
+  RETURN SELECT (
+  element_at(regexp_extract_all(ip_addr, "(\\d+)"), 1) * POW(256, 3) +
+  element_at(regexp_extract_all(ip_addr, "(\\d+)"), 2) * POW(256, 2) +
+  element_at(regexp_extract_all(ip_addr, "(\\d+)"), 3) * POW(256, 1) +
+  element_at(regexp_extract_all(ip_addr, "(\\d+)"), 4) * POW(256, 0) 
+  ) 
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC Delta Sharing requests by ISO Country Code
+
+-- COMMAND ----------
+
+WITH delta_sharing_requests AS (
+  SELECT
+    date,
+    email,
+    sourceIPAddress,
+    inet_aton(sourceIPAddress) AS source_ip_integer,
+    requestParams.name
+  FROM
+    audit_logs.gold_account_unitycatalog uc
+  WHERE
+    actionName IN (
+      "getShare",
+      "deltaSharingListShares",
+      "deltaSharingListSchemas",
+      "deltaSharingListTables",
+      "deltaSharingQueryTable",
+      "deltaSharingListAllTables",
+      "deltaSharingGetTableVersion",
+      "deltaSharingGetTableMetadata"
+    )
+)
+SELECT
+  gcl.subdivision_1_iso_code AS state,
+  COUNT(*) AS num_requests
+FROM
+  delta_sharing_requests ds
+  LEFT JOIN geoip.geolite2_city_with_ranges gcr ON ds.source_ip_integer BETWEEN gcr.network_start_integer
+  AND gcr.network_last_integer
+  LEFT JOIN geoip.geolite2_city_locations_en gcl ON gcr.geoname_id = gcl.geoname_id
+GROUP BY
+  1
+ORDER BY
+  num_requests DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC Delta Sharing requests by US State
+
+-- COMMAND ----------
+
+WITH delta_sharing_requests AS (
+  SELECT
+    date,
+    email,
+    sourceIPAddress,
+    inet_aton(sourceIPAddress) AS source_ip_integer,
+    requestParams.name
+  FROM
+    audit_logs.gold_account_unitycatalog uc
+  WHERE
+    actionName IN (
+      "getShare",
+      "deltaSharingListShares",
+      "deltaSharingListSchemas",
+      "deltaSharingListTables",
+      "deltaSharingQueryTable",
+      "deltaSharingListAllTables",
+      "deltaSharingGetTableVersion",
+      "deltaSharingGetTableMetadata"
+    )
+)
+SELECT
+  gcl.subdivision_1_iso_code AS state,
+  COUNT(*) AS num_requests
+FROM
+  delta_sharing_requests ds
+  LEFT JOIN geoip.geolite2_city_with_ranges gcr ON ds.source_ip_integer BETWEEN gcr.network_start_integer
+  AND gcr.network_last_integer
+  LEFT JOIN geoip.geolite2_city_locations_en gcl ON gcr.geoname_id = gcl.geoname_id
+GROUP BY
+  1
+ORDER BY
+  num_requests DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC Delta Sharing requests by Lat/Long
+
+-- COMMAND ----------
+
+WITH delta_sharing_requests AS (
+  SELECT
+    date,
+    email,
+    sourceIPAddress,
+    inet_aton(sourceIPAddress) AS source_ip_integer,
+    requestParams.name
+  FROM
+    audit_logs.gold_account_unitycatalog uc
+  WHERE
+    actionName IN (
+      "getShare",
+      "deltaSharingListShares",
+      "deltaSharingListSchemas",
+      "deltaSharingListTables",
+      "deltaSharingQueryTable",
+      "deltaSharingListAllTables",
+      "deltaSharingGetTableVersion",
+      "deltaSharingGetTableMetadata"
+    )
+)
+SELECT
+  ds.date,
+  gcr.network,
+  ds.name,
+  gcr.latitude,
+  gcr.longitude,
+  gcl.city_name,
+  COUNT(*) AS num_requests
+FROM
+  delta_sharing_requests ds
+  LEFT JOIN geoip.geolite2_city_with_ranges gcr ON ds.source_ip_integer BETWEEN gcr.network_start_integer
+  AND gcr.network_last_integer
+  LEFT JOIN geoip.geolite2_city_locations_en gcl ON gcr.geoname_id = gcl.geoname_id
+GROUP BY
+  1, 2, 3, 4, 5, 6
+ORDER BY
+  num_requests DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
 -- MAGIC ###[Delta Sharing](https://databricks.com/product/delta-sharing) Recipients without IP ACLs defined
 
 -- COMMAND ----------
