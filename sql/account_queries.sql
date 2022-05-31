@@ -383,3 +383,26 @@ AND requestParams.ip_access_list IS NOT NULL
 AND NOT arrays_overlap(from_json(requestParams.ip_access_list:allowed_ip_addresses, "ARRAY<STRING>"), array("0.0.0.0", "0.0.0.0/32"))
 ORDER BY
   date DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ###[Delta Sharing](https://databricks.com/product/delta-sharing) requests which fail IP ACL restrictions
+-- MAGIC We can also search for any requests that have failed our [Delta Sharing IP access list restrictions](https://docs.databricks.com/data-sharing/delta-sharing/access_list.html#audit-logging) via a query like the below
+
+-- COMMAND ----------
+
+SELECT
+  date,
+  sourceIPAddress,
+  requestParams.recipient_name,
+  requestParams.share_name,
+  actionName,
+  statusCode,
+  errorMessage
+FROM
+  audit_logs.gold_account_unitycatalog
+WHERE
+  requestParams.is_ip_access_denied = true
+ORDER BY
+  date DESC
