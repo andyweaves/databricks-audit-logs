@@ -403,6 +403,6 @@ SELECT
 FROM
   audit_logs.gold_account_unitycatalog
 WHERE
-  requestParams.is_ip_access_denied = true
+  requestParams.is_ip_access_denied = "true"
 ORDER BY
   date DESC
