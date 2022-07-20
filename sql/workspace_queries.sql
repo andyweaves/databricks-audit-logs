@@ -476,3 +476,46 @@ FROM
  AND timestamp >= current_date() - 1
  AND contains(requestParams.commandText, {{query_string}})
  ORDER BY timestamp DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC All SQL ```SELECT``` or CRUD statements run interactively from a notebook and all Databricks SQL queries run interactively over the last day
+
+-- COMMAND ----------
+
+SELECT
+  timestamp,
+  sourceIPAddress,
+  email,
+  requestParams.commandText,
+  actionName,
+  requestId,
+  userAgent,
+  statusCode
+FROM
+  audit_logs.gold_workspace_notebook
+WHERE
+  actionName = "runCommand"
+  AND timestamp >= current_date() - 1
+  AND startswith(requestParams.commandText, 'SELECT')
+  OR startswith(requestParams.commandText, 'CREATE')
+  OR startswith(requestParams.commandText, 'DROP')
+  OR startswith(requestParams.commandText, 'ALTER')
+UNION ALL
+SELECT
+  timestamp,
+  sourceIPAddress,
+  email,
+  requestParams.commandText,
+  actionName,
+  requestId,
+  userAgent,
+  statusCode
+FROM
+  audit_logs.gold_workspace_databrickssql
+WHERE
+  actionName IN ("commandSubmit", "commandFinish")
+  AND timestamp >= current_date() - 1
+ORDER BY
+  timestamp DESC
