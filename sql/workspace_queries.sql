@@ -399,3 +399,80 @@ GROUP BY
   2
 ORDER BY
   num_requests DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ### Verbose Audit Logs
+-- MAGIC When enabled, [verbose audit logs](https://docs.databricks.com/administration-guide/account-settings/audit-logs.html#configure-verbose-audit-logs) capture the notebook and SQL commands run interactively by your users. The following queries show how you can analyze these in a number of different scenarios.
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC Use of the ```display()``` function within the last day
+
+-- COMMAND ----------
+
+SELECT
+  date,
+  sourceIPAddress,
+  email,
+  requestParams.commandText,
+  COUNT(*) AS total
+FROM
+  audit_logs.gold_workspace_notebook
+WHERE
+  actionName = "runCommand"
+  AND timestamp >= current_date() - 1
+  AND requestParams.commandText rlike ".*display(.*).*"
+GROUP BY 1, 2, 3, 4
+ORDER BY total DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC Use of the print() function within the last day
+
+-- COMMAND ----------
+
+SELECT
+  date,
+  sourceIPAddress,
+  email,
+  requestParams.commandText,
+  COUNT(*) AS total
+FROM
+  audit_logs.gold_workspace_notebook
+WHERE
+  actionName = "runCommand"
+  AND timestamp >= current_date() - 1
+  AND requestParams.commandText rlike 'print[/s]?(?! e)(.)+'
+GROUP BY 1, 2, 3, 4
+ORDER BY total DESC
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC Use of a specific ```query_string``` within the last day - can be used in scenarios like 0 day exploits to find use of specific libraries (I.e. searching for ```import ctx```) 
+-- MAGIC 
+-- MAGIC  NB ```{{query_string}}``` denotes a DB SQL widget, and so this query should be used in Databricks SQL or modified to use notebook widgets like ```getArgument()``` instead
+
+-- COMMAND ----------
+
+SELECT
+  timestamp,  
+  workspaceId,
+  sourceIPAddress,
+  email,
+  requestParams.commandText,
+  requestParams.status,
+  requestParams.executionTime,
+  requestParams.notebookId,
+  result,
+  errorMessage
+FROM
+  audit_logs.gold_workspace_notebook
+ WHERE actionName = "runCommand"
+ AND timestamp >= current_date() - 1
+ AND contains(requestParams.commandText, {{query_string}})
+ ORDER BY timestamp DESC
