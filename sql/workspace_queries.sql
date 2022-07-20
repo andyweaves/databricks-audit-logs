@@ -502,6 +502,7 @@ WHERE
   OR startswith(requestParams.commandText, 'CREATE')
   OR startswith(requestParams.commandText, 'DROP')
   OR startswith(requestParams.commandText, 'ALTER')
+  OR startswith(requestParams.commandText, 'DELETE')
 UNION ALL
 SELECT
   timestamp,
