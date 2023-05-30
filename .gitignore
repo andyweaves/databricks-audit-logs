@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Ignore scratch notebook
+notebooks/scratch.py
+
 # C extensions
 *.so
 
