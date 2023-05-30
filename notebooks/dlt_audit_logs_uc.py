@@ -68,7 +68,7 @@ def create_silver_tables(audit_level):
             .withColumn("timestamp", from_utc_timestamp(from_unixtime(col("timestamp") / 1000), "UTC"))
             .withColumn("email", col("userIdentity.email"))
             .withColumn("source_filename", col("_metadata.file_name"))
-           .drop("_rescued_data", "userIdentity")
+           .drop("_rescued_data", "userIdentity", "_metadata")
            )
 
 # COMMAND ----------
