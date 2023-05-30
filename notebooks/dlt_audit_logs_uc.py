@@ -1,5 +1,6 @@
 # Databricks notebook source
-INPUT_PATH = spark.conf.get("INPUT_PATH")
+INPUT_PATH = spark.conf.get("INPUT_PATH") # This should be an S3 bucket or UC managed external location. If S3 bucket, you will need to give the cluster access to a valid instance profile
+CHECKPOINT_PATH = spark.conf.get("CHECKPOINT_PATH") # This should be a UC managed external location
 CONFIG_FILE = spark.conf.get("CONFIG_FILE")
 
 # COMMAND ----------
@@ -33,7 +34,7 @@ def create_bronze_tables(audit_level, service_names):
     "delta.autoOptimize.autoCompact": "true"
     }
   )
-  @dlt.expect_all({"clean_schema": "_rescued_data IS NULL", "unexpected_service_names": f"serviceName IN {tuple(service_names)}", "valid_workspace_id": "workspaceId >=0"})
+  @dlt.expect_all({"unexpected_service_names": f"serviceName IN {tuple(service_names)}", "valid_workspace_id": "workspaceId >=0"}) # "clean_schema": "_rescued_data IS NULL"
   def create_bronze_tables():
     return (spark.readStream
             .format("cloudFiles")
@@ -42,7 +43,7 @@ def create_bronze_tables(audit_level, service_names):
             .option("cloudFiles.inferColumnTypes", "true")
             .option("cloudFiles.schemaEvolutionMode", "rescue")
             .option("cloudFiles.schemaHints", "workspaceId long, requestParams map<string, string>, response struct<errorMessage: string, result: string, statusCode: bigint>")
-            # .option("cloudFiles.schemaLocation", f"{OUTPUT_PATH}bronze/schema/{audit_level}/")
+            .option("cloudFiles.schemaLocation", CHECKPOINT_PATH)
             .load(INPUT_PATH)
             .where(f"auditLevel == '{audit_level.upper()}_LEVEL'")
             .select("*", "_metadata"))

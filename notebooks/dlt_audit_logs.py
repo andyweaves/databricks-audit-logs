@@ -35,7 +35,7 @@ def create_bronze_tables(audit_level, service_names):
     "delta.autoOptimize.autoCompact": "true"
     }
   )
-  @dlt.expect_all({"clean_schema": "_rescued_data IS NULL", "unexpected_service_names": f"serviceName IN {tuple(service_names)}", "valid_workspace_id": "workspaceId >=0"})
+  @dlt.expect_all({"unexpected_service_names": f"serviceName IN {tuple(service_names)}", "valid_workspace_id": "workspaceId >=0"}) # "clean_schema": "_rescued_data IS NULL"
   def create_bronze_tables():
     return (spark.readStream
             .format("cloudFiles")
