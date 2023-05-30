@@ -2,11 +2,11 @@
 	"log_levels": [
 		{
           "level": "ACCOUNT_LEVEL",
-          "service_names": "accountsManager,accounts,accountBillableUsage,logDelivery,unityCatalog,ssoConfigBackend"
+          "service_names": "accountsManager,accounts,accountBillableUsage,lineageTracking,logDelivery,oauth2,servicePrincipalCredentials,ssoConfigBackend,unityCatalog"
         },
         {
           "level": "WORKSPACE_LEVEL",
-          "service_names": "accounts,capsule8-alerts-dataplane,clamAVScanService-dataplane,clusters,clusterPolicies,databrickssql,dbfs,deltaPipelines,featureStore,genie,gitCredentials,globalInitScripts,iamRole,instancePools,jobs,mlflowAcledArtifact,mlflowExperiment,modelRegistry,notebook,RemoteHistoryService,repos,ssh,secrets,sqlanalytics,sqlPermissions,webTerminal,workspace"
+          "service_names": "accounts,capsule8-alerts-dataplane,clamAVScanService-dataplane,clusters,clusterLibraries,clusterPolicies,databrickssql,dbfs,deltaPipelines,featureStore,genie,gitCredentials,globalInitScripts,groups,iamRole,instancePools,jobs,mlflowAcledArtifact,mlflowExperiment,modelRegistry,notebook,partnerhub,RemoteHistoryService,repos,secrets,serverlessRealTimeInference,sqlanalytics,sqlPermissions,ssh,syslog,webhookNotifications,webTerminal,workspace,workspaceFiles"
         }
       ]
 }

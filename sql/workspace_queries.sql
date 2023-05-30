@@ -337,7 +337,7 @@ ORDER BY
 -- MAGIC %md
 -- MAGIC ###ClamAV Scan Results
 -- MAGIC Customers who have a requirement to process cardholder data as defined by PCI-DSS, or who have elevated security requirements can choose to leverage our [PCI-DSS compliance controls](https://docs.databricks.com/administration-guide/cloud-configurations/aws/pci.html) or [Enhanced Security Mode](https://docs.databricks.com/administration-guide/cloud-configurations/aws/enhanced-security-mode.html) features on AWS. 
--- MAGIC 
+-- MAGIC
 -- MAGIC The query below searches [audit log entries related to ClamAV](https://docs.databricks.com/administration-guide/cloud-configurations/aws/monitor-log-schemas.html#clamav-audit-log-row-schema) to find any occurances where the AV scan has detected infected files
 
 -- COMMAND ----------
@@ -424,7 +424,7 @@ FROM
 WHERE
   actionName = "runCommand"
   AND timestamp >= current_date() - 1
-  AND requestParams.commandText rlike ".*display(.*).*"
+  AND requestParams.commandText rlike ".*display(.*).*" 
 GROUP BY 1, 2, 3, 4
 ORDER BY total DESC
 
@@ -454,7 +454,7 @@ ORDER BY total DESC
 
 -- MAGIC %md
 -- MAGIC Use of a specific ```query_string``` within the last day - can be used in scenarios like 0 day exploits to find use of specific libraries (I.e. searching for ```import ctx```) 
--- MAGIC 
+-- MAGIC
 -- MAGIC  NB ```{{query_string}}``` denotes a DB SQL widget, and so this query should be used in Databricks SQL or modified to use notebook widgets like ```getArgument()``` instead
 
 -- COMMAND ----------
