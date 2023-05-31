@@ -35,7 +35,7 @@ def create_bronze_tables(audit_level, service_names):
     "delta.autoOptimize.autoCompact": "true"
     }
   )
-  @dlt.expect_all({"unexpected_service_names": f"serviceName IN {tuple(service_names)}", "valid_workspace_id": "workspaceId >=0"}) # "clean_schema": "_rescued_data IS NULL"
+  @dlt.expect_all({"unexpected_service_names": f"serviceName IN {tuple(service_names)}"}) 
   def create_bronze_tables():
     return (spark.readStream
             .format("cloudFiles")
@@ -64,7 +64,7 @@ def create_silver_tables(audit_level):
     "pipelines.autoOptimize.zOrderCols": "serviceName,actionName,email"
     }
   )
-  @dlt.expect_all({"timestamp_is_not_null": "timestamp IS NOT NULL", "service_name_is_not_null": "serviceName IS NOT NULL", "action_name_is_not_null": "actionName IS NOT NULL"})
+  @dlt.expect_all({"valid_workspace_id": "workspaceId >=0", "timestamp_is_not_null": "timestamp IS NOT NULL", "service_name_is_not_null": "serviceName IS NOT NULL", "action_name_is_not_null": "actionName IS NOT NULL"})
   def create_silver_tables():
     return (dlt.read_stream(f"bronze_{audit_level}")
             .withColumn("timestamp", from_utc_timestamp(from_unixtime(col("timestamp") / 1000), "UTC"))

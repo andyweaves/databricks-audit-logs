@@ -30,9 +30,7 @@ Note: once you’ve edited the settings that are configurable via the UI, you’
 ### UC Setup:
 
 3. If you're writing to a UC Metastore you’ll need to enter the following configuration options:
-
    * ```INPUT_PATH```: The cloud storage path that you’ve configured for audit log delivery. This will can either be a UC managed external location or a protected storage account which isn’t exposed to your Databricks users. If you choose to use a protected storage account, you will also need to add the appropriate cloud IAM configuration as per the note above.
-   * ```CHECKPOINT_PATH```: The streaming checkpoint path that you want to use. can either be a UC managed external location or a protected storage account which isn’t exposed to your Databricks users. If you choose to use a protected storage account, you will also need to add the appropriate cloud IAM configuration as per the note above.
    * ```CONFIG_FILE```: The path to the [audit_logs.json](configuration/audit_logs.json) file once checked out in your repo. 
 
 4. Now you should be ready to configure your pipeline to run based on the appropriate schedule and trigger. Once it’s ran successfully, you should see something like this:
